@@ -106,7 +106,7 @@ class beam:
         else:
             print('Entered spatial profile is not recognized. Please enter either gauss, flattop, or user.')
 
-    def generate_amplitude_map(x_array, y_array, x_offset, y_offset, array, max_val=None): #how will user input/upload array??
+    def generate_amplitude_map(x_array, y_array, x_offset, y_offset, pixel_pitch, array, max_val=None): #how will user input/upload array??
         "Given an x and y array will produce an amplitude map of the beam as defined. x/y offsets will displace the beam in the respective axis."
         if self.spatial == "gauss":
             import pykat.optics.gaussian_beams as gb
