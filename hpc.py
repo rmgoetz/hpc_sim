@@ -98,12 +98,12 @@ class beam:
         self.freq = freq
 
     def set_spatial(spatial):
-        if spatial == "gauss" or "flattop":
+        if spatial == "gauss" or "flattop" or "user":
             self.spatial = spatial
         else:
-            print('Entered spatial profile is not recognized. Please enter either gauss or flattop.')
+            print('Entered spatial profile is not recognized. Please enter either gauss, flattop, or user.')
 
-    def generate_amplitude_map(x_array, y_array, x_offset, y_offset):
+    def generate_amplitude_map(x_array, y_array, x_offset, y_offset, array, max_val=None): #how will user input/upload array??
         "Given an x and y array will produce an amplitude map of the beam as defined. x/y offsets will displace the beam in the respective axis."
         if self.spatial == "gauss":
             import pykat.optics.gaussian_beams as gb
@@ -111,6 +111,23 @@ class beam:
             HG00 = gb.HG_mode(q,n=0, m=0)
             u00 = np.sqrt(self.power)*HG00.Unm(y_array-y_offset, x_array-x_offset)
             return u00
+
+        elif self.spatial == "user":
+            #applies user array to custimize beam shape
+            #maybe some code to change into numpy array if some sort of upload?? but assuming numpy
+            uArray = np.zeroes((y_array,x_array))#(ROWS, COLUMNS)
+            if array.shape != (y_array, x_array): #numpy array is (ROWS, COLUMNS)
+                print('Entered array is not the correct size. Please enter an array with ' 
+                    + str(y_array) + ' Rows and ' + str(x_array) + ' Columns.')
+                return #return some basic beam ?? or should everything end
+            if array.dtype == bool:
+                uArray[array] = np.sqrt(self.power)/(self.pixel_pitch) 
+                return uArray
+            else: #assuming the entered array isn't a string or anything stupid...
+                if max_val == None:
+                    max_val = array.max()
+                uArray = (array/max_val) * np.sqrt(self.power) /(self.pixel_pitch)
+                return uArray
 
         else:
             xx, yy = np.meshgrid(x_array,y_array)
