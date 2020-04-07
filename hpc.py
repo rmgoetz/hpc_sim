@@ -100,10 +100,13 @@ class beam:
     def set_spatial(spatial):
         if spatial == "gauss" or "flattop":
             self.spatial = spatial
+        elif spatial == "user":
+            self.spatial = spatial
+            self.array = input(print('Please enter your spatial array: '))
         else:
-            print('Entered spatial profile is not recognized. Please enter either gauss or flattop.')
+            print('Entered spatial profile is not recognized. Please enter either gauss, flattop, or user.')
 
-    def generate_amplitude_map(x_array, y_array, x_offset, y_offset):
+    def generate_amplitude_map(x_array, y_array, x_offset, y_offset, pixel_pitch, array, max_val=None): #how will user input/upload array??
         "Given an x and y array will produce an amplitude map of the beam as defined. x/y offsets will displace the beam in the respective axis."
         if self.spatial == "gauss":
             import pykat.optics.gaussian_beams as gb
@@ -111,6 +114,29 @@ class beam:
             HG00 = gb.HG_mode(q,n=0, m=0)
             u00 = np.sqrt(self.power)*HG00.Unm(y_array-y_offset, x_array-x_offset)
             return u00
+
+        
+        elif self.spatial == "user":
+            #applies user array to custimize beam shape
+            yy = np.meshgrid(x_array,y_array)
+            ampIntArr = np.zeros(np.shape(yy))#(ROWS, COLUMNS)
+            
+            if array.shape != (np.shape(yy)): #numpy array is (ROWS, COLUMNS)
+                print('Entered array is not the correct size. Please enter an array with ' 
+                    + str(np.shape(yy)) + ' Rows and Columns.')
+                return #return some basic beam ?? or should everything end
+            
+            if array.dtype == bool:
+                ampIntArr[array] = np.sqrt(self.power)/(pixel_pitch * np.sqrt(numPix)) 
+                return ampIntArr
+            else: #assuming the entered array isn't a string or anything stupid...
+                if max_val == None:
+                    max_val = array.max()
+                normArr = np.zeros(np.shape(yy))
+                numPix = np.count_nonzero(array) #number of pixels with nonzero value
+                normArr = array/max_val
+                ampIntArr = np.sqrt( normArr * self.power / (numPix * np.sum(normArr)) ) / pixel_pitch
+                return ampIntArr
 
         else:
             xx, yy = np.meshgrid(x_array,y_array)
