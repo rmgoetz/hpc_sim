@@ -12,7 +12,7 @@ class CMOS_sensor:
     and then provide functionality for adding noise to that images as well as digitization.
     Default values are those for the Blackfly S, however this can be used generally.
     """
-    def __init__(self, pixel_pitch=6.9e-6, x_resolution=728, y_resolution=544, exposure_time=4e-6, quantum_eff=0.03, pixel_well_depth=22187):
+    def __init__(self, pixel_pitch=6.9e-6, x_resolution=720, y_resolution=540, exposure_time=4e-6, quantum_eff=0.03, pixel_well_depth=22187):
         "Intializes a CMOS sensor with requested dimensions and generates x and y arrays to generate desired images."
         self.pixel_pitch = pixel_pitch
         self.x_resolution = x_resolution
@@ -26,7 +26,7 @@ class CMOS_sensor:
     def set_pixel_well_depth(pixel_well_depth):
         self.pixel_well_depth = pixel_well_depth
 
-    def set_quantum_eff(quantum_eff):
+    def set_quantum_eff(quantum_eff): 
         self.quantum_eff = quantum_eff
 
     def set_exposure_time(exposure_time):
@@ -69,42 +69,40 @@ class CMOS_sensor:
     	digitized_image = np.digitize(np.real(image), bins)
     	return digitized_image
 
-    def capture(self, image, bitdepth):
+    def capture(self, image, mean=3.71, bitdepth):
         "Given an intensity image, will produce a more realistic version as if passing through the camera."
         photons = self.convert_to_photons(image)
         shot_noise = self.add_shot_noise(photons)
         electrons = self.convert_to_electrons(shot_noise)
-        read_noise = self.add_read_noise(electrons)
+        read_noise = self.add_read_noise(electrons, mean)
         digitized_image = self.digitize(read_noise, bitdepth)
         return digitized_image
 
 class beam:
-    def __init__(power, w0, z, freq=None, spatial="gauss"):
+    def __init__(self, power, w0, z, freq=None, spatial="gauss"):
         self.power = power
         self.w0 = w0
         self.freq = freq
         self.spatial = spatial
+        self.z = z 
 
-    def set_power(power):
+    def set_power(self, power):
         self.power = power
 
-    def set_w0(w0):
+    def set_w0(self, w0):
         self.w0 = w0
 
-    def set_z(z):
+    def set_z(self, z):
         self.z = z
 
-    def set_freq(freq):
+    def set_freq(self, freq):
         self.freq = freq
 
-    def set_spatial(spatial):
+    def set_spatial(self, spatial):
         if spatial == "gauss" or "flattop":
             self.spatial = spatial
-        elif spatial == "user":
-            self.spatial = spatial
-            self.array = input(print('Please enter your spatial array: '))
         else:
-            print('Entered spatial profile is not recognized. Please enter either gauss, flattop, or user.')
+            print('Entered spatial profile is not recognized. Please enter either gauss or flattop.')
 
     def generate_amplitude_map(x_array, y_array, x_offset, y_offset, pixel_pitch, array, max_val=None): #how will user input/upload array??
         "Given an x and y array will produce an amplitude map of the beam as defined. x/y offsets will displace the beam in the respective axis."
@@ -114,7 +112,6 @@ class beam:
             HG00 = gb.HG_mode(q,n=0, m=0)
             u00 = np.sqrt(self.power)*HG00.Unm(y_array-y_offset, x_array-x_offset)
             return u00
-
         
         elif self.spatial == "user":
             #applies user array to custimize beam shape
@@ -124,7 +121,6 @@ class beam:
             if array.shape != (np.shape(yy)): #numpy array is (ROWS, COLUMNS)
                 print('Entered array is not the correct size. Please enter an array with ' 
                     + str(np.shape(yy)) + ' Rows and Columns.')
-                return #return some basic beam ?? or should everything end
             
             if array.dtype == bool:
                 ampIntArr[array] = np.sqrt(self.power)/(pixel_pitch * np.sqrt(numPix)) 
@@ -146,7 +142,11 @@ class beam:
             tophat[mask] = np.sqrt(self.power)/(np.sqrt(np.pi)*r)
             return tophat
 
-    #def add_RIN(image, mean):
+def add_RIN(image, mean):
+    "This will be made more complex in later versions, but will add random noise on top of the image"
+    noise = np.abs(np.random.normal(loc=mean, size=image.shape))
+    noisey_image = image + noise
+    return noisey_image
 
 def four_point(images):
     "Four point phase algorithm"
@@ -195,7 +195,6 @@ def carre(images):
 
     return phase  
     
-
 def novak(images):
     'Novak phase algorithm'
     phase = []
@@ -214,6 +213,7 @@ def novak(images):
             n = np.sqrt(abs(4*a24**2 - a15**2))
             pm = np.sign(a24)
             phase.append(np.arctan2(pm*n,d))
+
         else: continue
     
     return phase
@@ -260,7 +260,6 @@ def plot(image, cmap='gray', cbar_lim=None):
 
     if cbar_lim != None:
         plt.clim(vmin=0, vmax=cbar_lim)
-
 
 def gauss_amp(x_array, y_array, w0, z, x_offset, y_offset):
     import pykat.optics.gaussian_beams as gb
