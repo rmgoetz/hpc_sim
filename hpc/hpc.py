@@ -99,12 +99,12 @@ class beam:
         self.freq = freq
 
     def set_spatial(self, spatial):
-        if spatial == "gauss" or "flattop":
+        if spatial == "gauss" or "flattop" or "user":
             self.spatial = spatial
         else:
             print('Entered spatial profile is not recognized. Please enter either gauss or flattop.')
 
-    def generate_amplitude_map(self, x_array, y_array, pixel_pitch=0, array=None, max_val=None, x_offset=0, y_offset=0): #how will user input/upload array??
+    def generate_amplitude_map(self, x_array, y_array, x_offset=0, y_offset=0, max_val=None): #how will user input/upload array??
         "Given an x and y array will produce an amplitude map of the beam as defined. x/y offsets will displace the beam in the respective axis."
         if self.spatial == "gauss":
             import pykat.optics.gaussian_beams as gb
@@ -115,6 +115,8 @@ class beam:
         
         elif self.spatial == "user":
             #applies user array to custimize beam shape
+	    array = input(print("Please enter array: "))
+            pixel_pitch = 6.9e-6 
             yy = np.meshgrid(x_array,y_array)
             ampIntArr = np.zeros(np.shape(yy))#(ROWS, COLUMNS)
             
