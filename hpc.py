@@ -69,7 +69,7 @@ class CMOS_sensor:
     	digitized_image = np.digitize(np.real(image), bins)
     	return digitized_image
 
-    def capture(self, image, mean=3.71, bitdepth):
+    def capture(self, image, bitdepth, mean=3.71):
         "Given an intensity image, will produce a more realistic version as if passing through the camera."
         photons = self.convert_to_photons(image)
         shot_noise = self.add_shot_noise(photons)
@@ -104,11 +104,11 @@ class beam:
         else:
             print('Entered spatial profile is not recognized. Please enter either gauss or flattop.')
 
-    def generate_amplitude_map(x_array, y_array, x_offset, y_offset, pixel_pitch, array, max_val=None): #how will user input/upload array??
+    def generate_amplitude_map(self, x_array, y_array, pixel_pitch=0, array=None, max_val=None, x_offset=0, y_offset=0): #how will user input/upload array??
         "Given an x and y array will produce an amplitude map of the beam as defined. x/y offsets will displace the beam in the respective axis."
         if self.spatial == "gauss":
             import pykat.optics.gaussian_beams as gb
-            q = gb.BeamParam(w0=w0, z=z)
+            q = gb.BeamParam(w0=self.w0, z=self.z)
             HG00 = gb.HG_mode(q,n=0, m=0)
             u00 = np.sqrt(self.power)*HG00.Unm(y_array-y_offset, x_array-x_offset)
             return u00
