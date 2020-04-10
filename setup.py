@@ -4,7 +4,7 @@ from setuptools import setup
 setup(name='hpc',
       version='0.1',
       description='Simulation package for heterodyne phase camera',
-      long_description=open('README.txt').read(),
+      long_description=open('README.md').read(),
       install_requires=['numpy','pykat','matplotlib'],
       classifiers=[
             'Development Status :: 1 - Planning',
